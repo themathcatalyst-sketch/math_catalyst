@@ -826,34 +826,50 @@ footer {
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="data.js"></script>
 <script>
-/* ── courses data ── */
-const courses = [
-  { id:0, title:"Class 9 Math",      tag:"SSC", tagColor:"#22d3ee", tagBg:"rgba(34,211,238,0.08)", accentFrom:"#0a2a3a", chapters:12, videos:48,  price:null },
-  { id:1, title:"Class 10 Math",     tag:"SSC", tagColor:"#22d3ee", tagBg:"rgba(34,211,238,0.08)", accentFrom:"#0a2a3a", chapters:14, videos:56,  price:null },
-  { id:2, title:"HSC 1st Year Math", tag:"HSC", tagColor:"#f59e0b", tagBg:"rgba(245,158,11,0.08)", accentFrom:"#2a1a05", chapters:10, videos:42,  price:null },
-  { id:3, title:"HSC 2nd Year Math", tag:"HSC", tagColor:"#f59e0b", tagBg:"rgba(245,158,11,0.08)", accentFrom:"#2a1a05", chapters:11, videos:46,  price:null },
-];
+/* ── courses: loaded from Supabase (see data.js) ── */
+(async () => {
+  const courses = await fetchCourses();
+  const grid = document.getElementById('home-courses-grid');
 
-/* render course cards */
-document.getElementById('home-courses-grid').innerHTML = courses.map(c => `
+  if (!courses.length) {
+    grid.innerHTML = '<p style="color:var(--text-3);text-align:center;grid-column:1/-1">Courses are coming soon.</p>';
+    return;
+  }
+
+  /* hero numbers come from the real data too */
+  const vals = document.querySelectorAll('.hero-stat .val');
+  if (vals[0]) vals[0].textContent = courses.length;
+  if (vals[1]) vals[1].textContent = courses.reduce((n, c) => n + c.videos, 0);
+
+  /* render course cards */
+  grid.innerHTML = courses.map(c => {
+    const hsc = c.tag === 'HSC';
+    const tagColor = hsc ? '#f59e0b' : '#22d3ee';
+    const tagBg = hsc ? 'rgba(245,158,11,0.08)' : 'rgba(34,211,238,0.08)';
+    const title = String(c.title).replace(/</g, '&lt;');
+    return `
   <div class="course-preview-card" onclick="location.href='course.html?id=${c.id}'">
     <div class="cpc-thumb" style="background:linear-gradient(135deg,${c.accentFrom},#050814)">
       <svg viewBox="0 0 260 110" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="130" cy="55" r="48" fill="none" stroke="${c.tagColor}" stroke-width="0.5" stroke-opacity="0.18" stroke-dasharray="4 6"/>
-        <text x="130" y="70" text-anchor="middle" font-size="44" font-weight="900" fill="${c.tagColor}" opacity="0.1" font-family="monospace">${c.tag==='HSC'?'∫':'x²'}</text>
+        <circle cx="130" cy="55" r="48" fill="none" stroke="${tagColor}" stroke-width="0.5" stroke-opacity="0.18" stroke-dasharray="4 6"/>
+        <text x="130" y="70" text-anchor="middle" font-size="44" font-weight="900" fill="${tagColor}" opacity="0.1" font-family="monospace">${hsc ? '∫' : 'x²'}</text>
       </svg>
     </div>
     <div class="cpc-body">
-      <span class="cpc-tag" style="background:${c.tagBg};color:${c.tagColor};border:1px solid ${c.tagColor}33">${c.tag}</span>
-      <div class="cpc-title">${c.title}</div>
+      <span class="cpc-tag" style="background:${tagBg};color:${tagColor};border:1px solid ${tagColor}33">${c.tag}</span>
+      <div class="cpc-title">${title}</div>
       <div class="cpc-meta">${c.chapters} chapters · ${c.videos} videos</div>
       <div class="cpc-price">
         ${c.price ? `৳${c.price}` : '<span class="tbd">Price coming soon</span>'}
       </div>
     </div>
-  </div>
-`).join('');
+  </div>`;
+  }).join('');
+})();
 
 /* ── FAQ data ── */
 const faqs = [
@@ -864,7 +880,7 @@ const faqs = [
   { q: "Can I watch the videos on my phone?",
     a: "Yes, the website works on any device — phone, tablet, or computer. Videos play directly on the site." },
   { q: "What if I forget my password?",
-    a: "You can reset your password from the login page using the 'Forgot password?' link. A reset link will be sent to your registered email." },
+    a: "Message your teacher on WhatsApp and they will set a new password for you. Then you can change it any time from your profile page." },
   { q: "Can I try before I buy?",
     a: "Yes! Every course has free preview lessons that anyone can watch without purchasing. Look for the 'Free' tag on videos in the course page." },
   { q: "What payment methods are accepted?",
